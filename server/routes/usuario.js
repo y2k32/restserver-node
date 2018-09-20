@@ -2,9 +2,10 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const _ = require('underscore');
 const Usuario = require('../models/usuario');
+const { verificaToken, verificaRole } = require(`../middlewares/autenticacion`);
 const app = express();
 
-app.get('/usuario', function(req, res) {
+app.get('/usuario', verificaToken, function(req, res) {
     let desde = req.query.desde || 0;
     desde = Number(desde);
     let limite = req.query.limite || 5;
@@ -29,7 +30,7 @@ app.get('/usuario', function(req, res) {
             })
         })
 })
-app.post('/usuario', function(req, res) {
+app.post('/usuario', verificaRole, function(req, res) {
     let body = req.body;
     let usuario = new Usuario({
         nombre: body.nombre,
@@ -51,7 +52,7 @@ app.post('/usuario', function(req, res) {
         });
     });
 });
-app.put('/usuario/:id', function(req, res) { // URL con parametros
+app.put('/usuario/:id', verificaRole, function(req, res) { // URL con parametros
     let idrec = req.params.id; // Recuperamos el parametro
     let body = _.pick(req.body, ['nombre', 'email', 'img', 'role', 'estado']); // Selecciona los campos que son actualizables
     // findByIdAndUpdate: actualiza los datos sin tomar en cuenta las validaciones del modelo y si agregamos la propiedad 
@@ -69,7 +70,7 @@ app.put('/usuario/:id', function(req, res) { // URL con parametros
         });
     });
 })
-app.delete('/usuario/:id', function(req, res) {
+app.delete('/usuario/:id', verificaRole, function(req, res) {
     let id = req.params.id;
     let body = _.pick(req.body, ['estado']);
     Usuario.findByIdAndUpdate(id, body, { new: true, runValidators: true }, (error, UsuarioDB) => {
